@@ -1,0 +1,19 @@
+yum install epel-release
+yum install fail2ban fail2ban-systemd
+systemctl enable fail2ban
+systemctl start fail2ban
+cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+vi /etc/fail2ban/jail.local
+vi /etc/fail2ban/jail.d/sshd.local
+[sshd]
+enabled = true
+port = ssh
+action = iptables-multiport
+logpath = /var/log/secure
+maxretry = 5
+bantime = 600
+systemctl restart fail2ban
+iptables -L -n
+fail2ban-client status
+fail2ban-client status sshd
+fail2ban-client set sshd unbanip
