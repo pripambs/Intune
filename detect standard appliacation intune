@@ -1,7 +1,7 @@
-## Script for detect standard application in intune 
+## Script for detect standard application in intune ini tinggal di custom saja sesuai kebutuhan 
   <#================================================================================================
   Script ini digunakan untuk deteksi aplikasi yang terinstall pada Windows device.
-  Data yang didapatkan akan dibandingkan dengan list aplikasi Standard Sukanda untuk set compliance
+  Data yang didapatkan akan dibandingkan dengan list aplikasi Standarduntuk set compliance
   Version: 1.0
  =================================================================================================#>
 
