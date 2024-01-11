@@ -1,0 +1,10 @@
+## How to solved device cannot enrollment to intune 
+Get-ExecutionPolicy
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+install-module intunesyncdebugtool -force
+test-intunesyncerrors
+.\commandtshootsync.ps1 
+Start-Sleep -Seconds 5
+$EnrollmentProcess = Start-Process -FilePath "C:\Windows\System32\DeviceEnroller.exe" -ArgumentList "/C /AutoenrollMDM" -NoNewWindow -Wait -PassThru
+dsregcmd.exe /debug /leave 
+gpupdate /force
