@@ -1,0 +1,9 @@
+<#================================================================================================
+  Script ini digunakan untuk deteksi status domain join dari Windows device.
+  Version: 1.0
+ =================================================================================================#>
+
+# Check status domain join dari device Windows
+$domainStatus = (Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain
+$boolDomain = @{"Domain Status" = $domainStatus}
+return $boolDomain | ConvertTo-Json -Compress
