@@ -1,0 +1,61 @@
+## Script to check sophos endpoint
+
+<#================================================================================================
+  Script ini digunakan untuk deteksi ClearPass dan Sophos Endpoint yang terinstall pada Windows device.
+  Data yang didapatkan akan dibandingkan dengan list aplikasi Standard Sukanda untuk set compliance
+  Version: 1.0
+ =================================================================================================#>
+
+# List aplikasi Standard Sukanda
+# List ini harus diperbaharui secara manual, jika ada penambahan, pengurangan, atau update terhadap versi aplikasi tersebut
+$arrStandardApplications = @("Sophos Endpoint Agent")
+$booStandardApplications = $false
+
+# Function untuk mendapatkan semua aplikasi yang terinstall di Windows device.
+function Get-InstalledApps {
+    if (![Environment]::Is64BitProcess) {
+        $arrRegistryPaths = @('HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+                              'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*')
+    }
+    else {
+        $arrRegistryPaths = @('HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+                              'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+                              'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+                              'HKCU:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*')
+    }
+
+    $arrUninstallRegistrations = @()
+    foreach ($registryPath in $arrRegistryPaths) {
+        if (Test-Path $registryPath) {
+            $arrUninstallRegistrations += Get-ItemProperty $registryPath
+        }
+    }
+
+    $arrInstalledApps = @()
+    foreach ($uninstallRegistration in $arrUninstallRegistrations) {
+        if ($uninstallRegistration.DisplayName -ne $null) {
+            $arrInstalledApps += $uninstallRegistration.DisplayName
+        }
+    }
+    return $arrInstalledApps
+}
+
+# Compare list aplikasi yang terinstall dengan list aplikasi Standard.
+$arrInstalledApplications = Get-InstalledApps
+ foreach ($installedApplication in $arrInstalledApplications) {
+    foreach ($StandardApplication in $arrStandardApplications) {
+        if ($installedApplication -eq $StandardApplication) {
+            $booStandardApplications = $true
+        }
+    }
+}
+
+# 
+if ($booStandardApplications) {
+    $appStatus = @{"Installation status" = "Sophos Endpoint Installed"}
+} 
+else {
+    $appStatus = @{"Installation status" = "Sophos Endpoint not Installed"}
+}
+
+return $appStatus | ConvertTo-Json -Compress
