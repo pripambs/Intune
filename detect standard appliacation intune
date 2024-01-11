@@ -1,0 +1,60 @@
+## Script for detect standard application in intune 
+  <#================================================================================================
+  Script ini digunakan untuk deteksi aplikasi yang terinstall pada Windows device.
+  Data yang didapatkan akan dibandingkan dengan list aplikasi Standard Sukanda untuk set compliance
+  Version: 1.0
+ =================================================================================================#>
+
+# List aplikasi Standard Sukanda
+# List ini harus diperbaharui secara manual, jika ada penambahan, pengurangan, atau update terhadap versi aplikasi tersebut
+$arrStandardApplications = @("7-Zip 22.00 (x64 edition)","Adobe Acrobat (64-bit)","AnyDesk MSI","Google Chrome","ClearPass OnGuard 6.9.8.132694","draw.io","ownCloud","Lark","LiteShow4","TightVNC","Zoom(32bit)","Sophos Connect","Sophos Endpoint Agent","Microsoft 365 Apps for business - en-us")
+$booStandardApplications = $false
+
+# Function untuk mendapatkan semua aplikasi yang terinstall di Windows device.
+function Get-InstalledApps {
+    if (![Environment]::Is64BitProcess) {
+        $arrRegistryPaths = @('HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+                              'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*')
+    }
+    else {
+        $arrRegistryPaths = @('HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+                              'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+                              'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+                              'HKCU:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*')
+    }
+
+    $arrUninstallRegistrations = @()
+    foreach ($registryPath in $arrRegistryPaths) {
+        if (Test-Path $registryPath) {
+            $arrUninstallRegistrations += Get-ItemProperty $registryPath
+        }
+    }
+
+    $arrInstalledApps = @()
+    foreach ($uninstallRegistration in $arrUninstallRegistrations) {
+        if ($uninstallRegistration.DisplayName -ne $null) {
+            $arrInstalledApps += $uninstallRegistration.DisplayName
+        }
+    }
+    return $arrInstalledApps
+}
+
+# Compare list aplikasi yang terinstall dengan list aplikasi Standard.
+$arrInstalledApplications = Get-InstalledApps
+ foreach ($installedApplication in $arrInstalledApplications) {
+    foreach ($StandardApplication in $arrStandardApplications) {
+        if ($installedApplication -eq $StandardApplication) {
+            $booStandardApplications = $true
+        }
+    }
+}
+
+# 
+if ($booStandardApplications) {
+    $appStatus = @{"Installation status" = "Standard app installed"}
+} 
+else {
+    $appStatus = @{"Installation status" = "There Standard apps that not installed"}
+}
+
+return $appStatus | ConvertTo-Json -Compress
